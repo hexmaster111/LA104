@@ -4,7 +4,7 @@ class CPortView : public CWindow
 	int mRow{4};
 	struct TRow
 	{
-		const char *id;
+		int id;
 		bool enabled;
 		enum
 		{
@@ -43,26 +43,38 @@ class CPortView : public CWindow
 		}
 	};
 
-	TRow mConfig[8];
-
-public:
-	CPortView()
+	void _itoa(int n, char *p, int base)
 	{
-		// const char *channels[] = {"GPA0:", "GPA1:", "GPA2:", "GPA3:", "GPA4:", "GPA5:",
-		// 						  "GPA6:", "GPA7:"};
-
-
+		if (base == 10)
+			sprintf(p, "%d", n);
+		else if (base == 16)
+			sprintf(p, "%x", n);
+		else
+			_ASSERT(0);
 	}
 
+	TRow mConfig[8];
+	char mPortPrefix[4]; // = {"GPX"}
+	char buff[6];		 // XXX:i\0
 
+public:
+	CPortView() {}
 
-	void Init(const char *portLabels[8])
+	void Init(char portLabelPrefex[4])
 	{
+		// mPortPrefix = portLabelPrefex;
+
+		for (int i = 0; i < 4; i++)
+			mPortPrefix[i] = portLabelPrefex[i]; // Copy in our label prefx
+
+		// Clean out the buff
+		for (int i = 0; i < COUNT(buff); i++)
+			buff[i] = 'x'; //'\0';
 
 		for (int i = 0; i < COUNT(mConfig); i++)
 		{
 			TRow &row = mConfig[i];
-			row.id = portLabels[i];
+			row.id = i; // We will give thease pretty labes as they are rendered to save some space
 			row.enabled = true;
 			row.dir = TRow::Input;
 			row.logic = 0;
@@ -116,10 +128,18 @@ public:
 
 	void DrawLine(int _x, int _y, const TRow &row, bool selected)
 	{
+		// Lets make the row id
+		// convert the row number into a char array, then add after the port prefex
+		_itoa(row.id, buff + 3, 10); // that 4 may be off by one... not sure (it was)
+		
+		// add the prefix to the buffer
+		for (int i = 0; i < COUNT(mPortPrefix) - 1; i++)
+			buff[i] = mPortPrefix[i];
+
 		if (selected && (mCol == 0 || !row.enabled || row.dir == TRow::OnlyInput))
-			LCD::Print(_x, _y, RGB565(000000), RGB565(FFFFFF), row.id);
+			BIOS::LCD::Print(_x, _y, RGB565(000000), RGB565(FFFFFF), buff);
 		else
-			LCD::Print(_x, _y, row.enabled ? RGB565(d0d0d0) : RGB565(808080), gBackground, row.id);
+			LCD::Print(_x, _y, row.enabled ? RGB565(d0d0d0) : RGB565(808080), gBackground, buff);
 
 		if (!row.enabled)
 		{

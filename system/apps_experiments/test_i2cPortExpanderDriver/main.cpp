@@ -13,11 +13,13 @@ public:
 		switch (i)
 		{
 		case 0:
-			return TItem{"MCP23017 Driver", TItem::Static};
+			return TItem{"MCP23017", TItem::Static};
 		case 1:
 			return TItem{"PortA", TItem::Default};
 		case 2:
 			return TItem{"PortB", TItem::Default};
+		case 3:
+			return TItem{"Setti", TItem::Default};
 		default:
 			return TItem{nullptr, TItem::None};
 		}
@@ -35,7 +37,6 @@ public:
 		InputPullDown,
 		Output
 	};
-	
 
 	void SetDirection(int pin, EDirection dir)
 	{
@@ -95,32 +96,47 @@ public:
 };
 
 #include "PortView.h"
+#include "settings.h"
 
 class CApplication : public CWnd
 {
 	CMenuMain mMenu;
 
-	CPortView mPortA;
-	CPortView mPortB;
+	CPortView mPortA; //Port viwer screen
+	CPortView mPortB; //Port viwer screen
+	CMCP23017Settings mSettings; //Settings Screen
+
+	struct TSetting // Cute little struct to hold the settings
+	{
+		const char *name;
+		int value;
+		int min;
+		int max;
+	};
+
+	TSetting mSessionSettings[1] = {
+		// Name    , init, min,  max
+		{"Adr", 0x20, 0x20, 0x27},
+	};
 
 public:
 	void Create()
 	{
-		const char *portAChannelNames[8] = {"GPA0:", "GPA1:", "GPA2:", "GPA3:", "GPA4:", "GPA5:",
-											"GPA6:", "GPA7:"};
+		mSettings.Init();
 
-		const char *portBChannelNames[8] = {"GPB0:", "GPB1:", "GPB2:", "GPB3:", "GPB4:", "GPB5:",
-											"GPB6:", "GPB7:"};
+		char portAPrefix[] = "GPA";
+		char portBPrefix[] = "GPB";
 
-		mPortA.Init(portAChannelNames);
-		mPortB.Init(portBChannelNames);
+		mPortA.Init(portAPrefix);
+		mPortB.Init(portBPrefix);
 
-		CWnd::Create("Application", CWnd::WsVisible, CRect(0, 0, BIOS::LCD::Width, BIOS::LCD::Height), nullptr);
-		mMenu.Create("MainMenu", CWnd::WsVisible, CRect(0, 0, BIOS::LCD::Width, 14), this);
+		CWnd::Create("App", CWnd::WsVisible, CRect(0, 0, BIOS::LCD::Width, BIOS::LCD::Height), nullptr);
+		mMenu.Create("Main", CWnd::WsVisible, CRect(0, 0, BIOS::LCD::Width, 14), this);
 
 		constexpr int padding = 0;
 		mPortA.Create("Port A Control", CWnd::WsHidden, CRect(padding, 14 + padding, BIOS::LCD::Width - padding, BIOS::LCD::Height - padding), this);
 		mPortB.Create("Port B Control", CWnd::WsHidden, CRect(padding, 14 + padding, BIOS::LCD::Width - padding, BIOS::LCD::Height - padding), this);
+		mSettings.Create("Settings", CWnd::WsHidden, CRect(padding, 14 + padding, BIOS::LCD::Width - padding, BIOS::LCD::Height - padding), this);
 
 		mPortA.ShowWindow(true);
 		mPortA.SetFocus();
@@ -130,7 +146,7 @@ public:
 	{
 		// TODO: Cleanup the I2C Stuffs
 	}
-	virtual void OnMessage(CWnd* pSender, int code, uintptr_t data) override
+	virtual void OnMessage(CWnd *pSender, int code, uintptr_t data) override
 	{
 		if (code == ToWord('M', 'S'))
 		{
@@ -138,12 +154,24 @@ public:
 			{
 				mPortA.ShowWindow(true);
 				mPortB.ShowWindow(false);
+				mSettings.ShowWindow(false);
+
 				Invalidate();
 			}
 			if (pSender == &mMenu && data == 2 && !mPortB.IsVisible())
 			{
 				mPortA.ShowWindow(false);
 				mPortB.ShowWindow(true);
+				mSettings.ShowWindow(false);
+
+				Invalidate();
+			}
+			if (pSender == &mMenu && data == 3 && !mSettings.IsVisible())
+			{
+				mPortA.ShowWindow(false);
+				mPortB.ShowWindow(false);
+				mSettings.ShowWindow(true);
+
 				Invalidate();
 			}
 		}
