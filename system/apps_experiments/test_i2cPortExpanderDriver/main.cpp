@@ -102,9 +102,9 @@ class CApplication : public CWnd
 {
 	CMenuMain mMenu;
 
-	CPortView mPortA; //Port viwer screen
-	CPortView mPortB; //Port viwer screen
-	CMCP23017Settings mSettings; //Settings Screen
+	CPortView mPortA;			 // Port viwer screen
+	CPortView mPortB;			 // Port viwer screen
+	CMCP23017Settings mSettings; // Settings Screen
 
 	struct TSetting // Cute little struct to hold the settings
 	{
@@ -114,12 +114,12 @@ class CApplication : public CWnd
 		int max;
 	};
 
-	TSetting mSessionSettings[1] = {
-		// Name    , init, min,  max
+public:
+	const TSetting mSessionSettings[1] = {
+		// Name,init, min,  max
 		{"Adr", 0x20, 0x20, 0x27},
 	};
 
-public:
 	void Create()
 	{
 		mSettings.Init();
