@@ -241,6 +241,17 @@ void DrawDelimLines(int y, ui16 clr)
 	BIOS::LCD::Bar( rcLine, clr );
 }
 
+void _itoa(int n, char* p, int base)
+{
+    if (base == 10)
+        sprintf(p, "%d", n);
+    else
+    if (base == 16)
+        sprintf(p, "%x", n);
+    else
+        _ASSERT(0);
+}
+
 void CWndUserManager::OnPaint()
 {
 	if ( HasFocus() && nSelected == -1 )
@@ -299,7 +310,17 @@ void CWndUserManager::OnPaint()
 
         CRect rcBack( 0, y, /*320*/BIOS::LCD::Width, y+14);
 	GUI::Background(rcBack, RGB565(404040), RGB565(404040));
-	BIOS::LCD::Print( 4, y, RGB565(808080), RGBTRANS, "Built: " __DATE__ " " __TIME__);
+
+	
+	// BIOS::DBG::sprintf(strBattery,"Battery: %u", a);
+	// BIOS::DBG::Print("Battery: %u", a);
+
+	auto a = BIOS::SYS::GetAttribute(BIOS::SYS::EAttribute::BatteryVoltage);
+	char strBattery [12] = "Batt: ";
+
+	_itoa(a, strBattery + 6, 10);
+
+	BIOS::LCD::Print( 4, y, RGB565(808080), RGBTRANS, strBattery);
 }
 
 void CWndUserManager::DrawProgress()

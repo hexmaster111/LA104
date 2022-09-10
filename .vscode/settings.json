@@ -1,0 +1,4 @@
+{
+    "cmake.configureOnOpen": false,
+    "cmake.sourceDirectory": "${workspaceFolder}/system/apps_shell/test29_fileman"
+}
