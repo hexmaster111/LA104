@@ -310,13 +310,16 @@ void CWndUserManager::OnPaint()
 
 	// BIOS::DBG::sprintf(strBattery,"Battery: %u", a);
 	// BIOS::DBG::Print("Battery: %u", a);
+}
 
+void DrawStatusBar()
+{
 	auto a = BIOS::SYS::GetAttribute(BIOS::SYS::EAttribute::BatteryVoltage);
 	char strBattery[12] = "Batt: ";
-
 	_itoa(a, strBattery + 6, 10);
-	BIOS::DBG::Print("%u", y);
-	BIOS::LCD::Print(4, y, RGB565(808080), RGBTRANS, strBattery);
+	const CRect statusBarBackground = {0, BIOS::LCD::Height - 12, BIOS::LCD::Width, BIOS::LCD::Height};
+	BIOS::LCD::RoundRect(statusBarBackground, RGB565(000000));
+	BIOS::LCD::Print(4, 226, RGB565(808080), RGBTRANS, strBattery);
 }
 
 void CWndUserManager::DrawProgress()
@@ -558,7 +561,7 @@ void CWndUserManager::OnKey(int nKey)
 	}
 }
 
-static unsigned long StatusBarRefreshTimer = 0; 
+static unsigned long StatusBarRefreshTimer = 0;
 
 void CWndUserManager::OnTimer()
 {
@@ -575,13 +578,14 @@ void CWndUserManager::OnTimer()
 	{
 		Invalidate();
 		redrawTimer = false;
+		DrawStatusBar();
 	}
 
 	if (StatusBarRefreshTimer < BIOS::SYS::GetTick())
 	{
 		// BIOS::SYS::Beep(100);
 		StatusBarRefreshTimer = BIOS::SYS::GetTick() + 1000;
-		// DrawStatusBar();
+		DrawStatusBar();
 	}
 }
 
