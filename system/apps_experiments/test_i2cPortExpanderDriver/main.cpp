@@ -3,6 +3,10 @@
 #include "shapes2.h"
 #include "Menu.h"
 
+// Test includes
+//  #include "Arduino.h"
+//  #include ""
+
 using namespace BIOS;
 
 class CMenuMain : public CTopMenu
@@ -106,13 +110,7 @@ class CApplication : public CWnd
 	CPortView mPortB;			 // Port viwer screen
 	CMCP23017Settings mSettings; // Settings Screen
 
-	struct TSetting // Cute little struct to hold the settings
-	{
-		const char *name;
-		int value;
-		int min;
-		int max;
-	};
+
 
 public:
 	const TSetting mSessionSettings[1] = {
@@ -122,11 +120,11 @@ public:
 
 	void Create()
 	{
-		mSettings.Init();
 
 		char portAPrefix[] = "GPA";
 		char portBPrefix[] = "GPB";
 
+		mSettings.Init(mSessionSettings);
 		mPortA.Init(portAPrefix);
 		mPortB.Init(portBPrefix);
 
