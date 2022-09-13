@@ -1,7 +1,8 @@
+
 class CPortView : public CWindow
 {
-	int mCol{0};
-	int mRow{4};
+	char mCol{0};
+	char mRow{0};
 	struct TRow
 	{
 		int id;
@@ -16,61 +17,15 @@ class CPortView : public CWindow
 		} dir;
 		bool logic;
 		bool prev;
-
-		CGpio::EDirection GetDirection()
-		{
-			if (!enabled)
-				return CGpio::EDirection::Disabled;
-			else
-			{
-				switch (dir)
-				{
-				case OnlyInput:
-					return CGpio::EDirection::Input;
-				case Input:
-					return CGpio::EDirection::Input;
-				case InputPu:
-					return CGpio::EDirection::InputPullUp;
-				case InputPd:
-					return CGpio::EDirection::InputPullDown;
-				case Output:
-					return CGpio::EDirection::Output;
-				default:
-					_ASSERT(0);
-					return CGpio::EDirection::Input;
-				}
-			}
-		}
 	};
 
-	void _itoa(int n, char *p, int base)
-	{
-		if (base == 10)
-			sprintf(p, "%d", n);
-		else if (base == 16)
-			sprintf(p, "%x", n);
-		else
-			_ASSERT(0);
-	}
-
 	TRow mConfig[8];
-	char mPortPrefix[4]; // = {"GPX"}
-	char buff[6];		 // XXX:i\0
 
 public:
 	CPortView() {}
 
-	void Init(char portLabelPrefex[4])
+	void Init()
 	{
-		// mPortPrefix = portLabelPrefex;
-
-		for (int i = 0; i < 4; i++)
-			mPortPrefix[i] = portLabelPrefex[i]; // Copy in our label prefx
-
-		// Clean out the buff
-		for (int i = 0; i < COUNT(buff); i++)
-			buff[i] = 'x'; //'\0';
-
 		for (int i = 0; i < COUNT(mConfig); i++)
 		{
 			TRow &row = mConfig[i];
@@ -128,18 +83,10 @@ public:
 
 	void DrawLine(int _x, int _y, const TRow &row, bool selected)
 	{
-		// Lets make the row id
-		// convert the row number into a char array, then add after the port prefex
-		_itoa(row.id, buff + 3, 10); // that 4 may be off by one... not sure (it was)
-		
-		// add the prefix to the buffer
-		for (int i = 0; i < COUNT(mPortPrefix) - 1; i++)
-			buff[i] = mPortPrefix[i];
-
 		if (selected && (mCol == 0 || !row.enabled || row.dir == TRow::OnlyInput))
-			BIOS::LCD::Print(_x, _y, RGB565(000000), RGB565(FFFFFF), buff);
+			BIOS::LCD::Printf(_x, _y, RGB565(000000), RGB565(FFFFFF), "%d", row.id);
 		else
-			LCD::Print(_x, _y, row.enabled ? RGB565(d0d0d0) : RGB565(808080), gBackground, buff);
+			LCD::Printf(_x, _y, row.enabled ? RGB565(d0d0d0) : RGB565(808080), gBackground, "%d", row.id);
 
 		if (!row.enabled)
 		{
@@ -208,46 +155,6 @@ public:
 
 		_x += 128;
 		_x += LCD::Print(_x, _y, RGB565(ffffff), gBackground, row.logic ? " 1 " : " 0 ");
-	}
-
-	void ScrollLevel(int i)
-	{
-		int _x = m_rcClient.left + 8;
-		int _y = m_rcClient.top + 4 + 16 + i * 18 + 18;
-		CRect rcLevel(_x + 180 + 1, _y + 1 + 1, _x + 180 + 80 - 1, _y + 14 - 1 - 1);
-
-		TRow &row = mConfig[i];
-
-		constexpr uint16_t clr0 = RGB565(404040);
-		constexpr uint16_t clr1 = RGB565(ffffff);
-		constexpr uint16_t clr2 = RGB565(606060);
-
-		static const uint16_t bufferOff[10] = {clr1, clr0, clr0, clr0, clr0, clr0, clr0, clr0, clr0, clr0};
-		static const uint16_t bufferOn[10] = {clr2, clr2, clr2, clr2, clr2, clr2, clr2, clr2, clr2, clr1};
-		static const uint16_t bufferSw[10] = {clr1, clr1, clr1, clr1, clr1, clr1, clr1, clr1, clr1, clr1};
-
-		LCD::BufferBegin(CRect(rcLevel.right - 1, rcLevel.top, rcLevel.right, rcLevel.bottom));
-
-		if (row.prev != row.logic)
-			LCD::BufferWrite((uint16_t *)bufferSw, 10);
-		else if (row.logic)
-			LCD::BufferWrite((uint16_t *)bufferOn, 10);
-		else
-			LCD::BufferWrite((uint16_t *)bufferOff, 10);
-		LCD::BufferEnd();
-
-		row.prev = row.logic;
-
-		uint16_t buffer[80];
-		for (int y = rcLevel.top; y < rcLevel.bottom; y++)
-		{
-			LCD::BufferBegin(CRect(rcLevel.left + 1, y, rcLevel.right, y + 1));
-			LCD::BufferRead(buffer, rcLevel.Width() - 1);
-			LCD::BufferEnd();
-			LCD::BufferBegin(CRect(rcLevel.left, y, rcLevel.right - 1, y + 1));
-			LCD::BufferWrite(buffer, rcLevel.Width() - 1);
-			LCD::BufferEnd();
-		}
 	}
 
 	virtual void OnPaint() override
@@ -375,7 +282,6 @@ public:
 					row.logic = random() & 1;
 					DrawLevel(i);
 				}
-				ScrollLevel(i);
 			}
 		}
 	}

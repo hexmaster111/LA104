@@ -1,28 +1,19 @@
+
 class CMCP23017Settings : public CWindow
 {
 private:
     int mRow; // Where the cursor is
-    int mCol; // Where the cursor is
-    const TSetting *mSettings;
+    TSetting *mSettings;
+    int mSettingsCount;
 
 public:
     CMCP23017Settings(){};
 
-    void Init(const TSetting *appSettings)
+    void Init(TSetting *appSettings, int settingsCount)
     {
         mSettings = appSettings;
         mRow = 0;
-        mCol = 0;
-    }
-
-    void _itoa(int n, char *p, int base)
-    {
-        if (base == 10)
-            sprintf(p, "%d", n);
-        else if (base == 16)
-            sprintf(p, "%x", n);
-        else
-            _ASSERT(0);
+        mSettingsCount = settingsCount;
     }
 
     virtual void OnPaint() override
@@ -34,44 +25,89 @@ public:
 
     void DrawSettingItem(int id)
     {
-        char scrollBuff[2];
-        _itoa(mSettings[id].value, scrollBuff, 16);
-        BIOS::LCD::Print(20, 40, RGB565(ffffff), gBackground, scrollBuff);
+        int y = 16 + 16 + id * 16;
+
+        unsigned short color;
+
+        if (id == mRow)
+        {
+            color = RGB565(ffffff);
+        }
+        else
+        {
+            color = RGB565(808080);
+        }
+
+        if (mSettings[id].format == TSetting::hex)
+            LCD::Printf(20, y, color, gBackground, "%s: 0x%02x", mSettings[id].name, mSettings[id].value);
+        else
+            LCD::Printf(20, y, color, gBackground, "%s: %d", mSettings[id].name, mSettings[id].value);
+
+        // BIOS::LCD::Printf(20, y, RGB565(ffffff), gBackground, "%s:%d", mSettings[id].name, mSettings[id].value);
+    }
+
+    void DrawApplyButton()
+    {
+        int y = 16 + 16 + mSettingsCount * 16 + 16;
+
+        unsigned short color;
+
+        if (mRow == mSettingsCount)
+        {
+            color = RGB565(ffffff);
+        }
+        else
+        {
+            color = RGB565(808080);
+        }
+
+        LCD::Printf(20, y, color, gBackground, "Apply");
     }
 
     void DrawSettings()
     {
-        for (int i = 0; i < 1; i++)
+        for (int i = 0; i < mSettingsCount; i++)
             DrawSettingItem(i);
 
+        DrawApplyButton();
+
+        BIOS::LCD::Printf(20, 200, RGB565(ffffff), gBackground, "Row:%d Val:%x", mRow, mSettings[mRow].value);
     }
 
     virtual void OnKey(int nKey) override
     {
-        if (nKey == BIOS::KEY::Left && mCol > 0)
+        if (nKey == BIOS::KEY::Left && mSettings[mRow].value > mSettings[mRow].min)
         {
-            mCol--;
-            DrawSettings();
+            mSettings[mRow].value--;
+            DrawSettingItem(mRow);
             return;
         }
-        if (nKey == BIOS::KEY::Right && mCol < 10)
+        if (nKey == BIOS::KEY::Right && mSettings[mRow].value < mSettings[mRow].max)
         {
-            // mSettings[0].value++;
-            // BIOS::DBG::Print("Value: %d", mSettings[0].value);
-            mCol++;
-            DrawSettings();
+            mSettings[mRow].value++;
+            DrawSettingItem(mRow);
             return;
         }
         if (nKey == BIOS::KEY::Up && mRow > 0)
         {
             mRow--;
+            DrawSettings();
             return;
         }
-        // if (nKey == BIOS::KEY::Down && mRow < COUNT(mSettings))
-        if (nKey == BIOS::KEY::Down && mRow < 1)
+        if (nKey == BIOS::KEY::Down && mRow < mSettingsCount) // Not - 1 because of Apply button
         {
             mRow++;
+            DrawSettings();
             return;
+        }
+
+        if (nKey == BIOS::KEY::Enter)
+        {
+            if (mRow == mSettingsCount)
+            {
+                // Apply
+                BIOS::SYS::Beep(100);
+            }
         }
 
         CWnd::OnKey(nKey);

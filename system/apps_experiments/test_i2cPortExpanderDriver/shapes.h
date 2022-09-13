@@ -1,10 +1,4 @@
-struct TSetting // Cute little struct to hold the settings
-{
-    const char *name;
-    int value;
-    int min;
-    int max;
-};
+
 
 static const char CShapes_sel_left[] =
     "\x0e"
@@ -72,12 +66,4 @@ static const char CShapes_dotout[] =
     "   ..---..    "
     "    .....     ";
 
-static const char CShapes_degree[] =
-    "\x0e"
-    "              "
-    "              "
-    "              "
-    "   ..         "
-    "  .  .        "
-    "  .  .        "
-    "   ..         ";
+

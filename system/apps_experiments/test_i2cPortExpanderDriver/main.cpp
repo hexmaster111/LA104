@@ -2,10 +2,10 @@
 #include "shapes.h"
 #include "shapes2.h"
 #include "Menu.h"
+#include "appSettings.h"
 
 // Test includes
-//  #include "Arduino.h"
-//  #include ""
+#include "arduino.h"
 
 using namespace BIOS;
 
@@ -19,61 +19,16 @@ public:
 		case 0:
 			return TItem{"MCP23017", TItem::Static};
 		case 1:
-			return TItem{"PortA", TItem::Default};
+			return TItem{"PA", TItem::Default};
 		case 2:
-			return TItem{"PortB", TItem::Default};
+			return TItem{"PB", TItem::Default};
 		case 3:
-			return TItem{"Setti", TItem::Default};
+			return TItem{"Cfg", TItem::Default};
 		default:
 			return TItem{nullptr, TItem::None};
 		}
 	}
 };
-
-class CGpio
-{
-public:
-	enum EDirection
-	{
-		Disabled,
-		Input,
-		InputPullUp,
-		InputPullDown,
-		Output
-	};
-
-	void SetDirection(int pin, EDirection dir)
-	{
-		switch (dir)
-		{
-		case Disabled:
-		case Input:
-			// GPIO::PinMode(pin, GPIO::EMode::Input);
-			break;
-		case InputPullUp:
-			// GPIO::PinMode(pin, (GPIO::EMode)(GPIO::EMode::Input | GPIO::EMode::PullUp));
-			break;
-		case InputPullDown:
-			// GPIO::PinMode(pin, (GPIO::EMode)(GPIO::EMode::Input | GPIO::EMode::PullDown));
-			break;
-		case Output:
-			// GPIO::PinMode(pin, GPIO::EMode::Output);
-			break;
-		}
-	}
-
-	bool Read(int pin)
-	{
-		return random() & 1;
-		// TODO: implement
-	}
-
-	void Write(int pin, bool level)
-	{
-		// TODO: implement
-	}
-
-} mGpio;
 
 constexpr uint16_t gBackground(RGB565(404040));
 constexpr uint16_t gControl(RGB565(909090));
@@ -110,31 +65,28 @@ class CApplication : public CWnd
 	CPortView mPortB;			 // Port viwer screen
 	CMCP23017Settings mSettings; // Settings Screen
 
-
-
 public:
-	const TSetting mSessionSettings[1] = {
-		// Name,init, min,  max
-		{"Adr", 0x20, 0x20, 0x27},
+	TSetting mSessionSettings[2] = {
+		{"Addr", 0x20, 0x20, 0x40, TSetting::TFormat::hex}, // I2C Target address
+		{"test", 15, 0, 100, TSetting::TFormat::dec},	 // Just A test value
 	};
 
 	void Create()
 	{
 
-		char portAPrefix[] = "GPA";
-		char portBPrefix[] = "GPB";
+		Arduino::Wire.begin();
 
-		mSettings.Init(mSessionSettings);
-		mPortA.Init(portAPrefix);
-		mPortB.Init(portBPrefix);
+		mSettings.Init(mSessionSettings, 2);
+		mPortA.Init();
+		mPortB.Init();
 
-		CWnd::Create("App", CWnd::WsVisible, CRect(0, 0, BIOS::LCD::Width, BIOS::LCD::Height), nullptr);
-		mMenu.Create("Main", CWnd::WsVisible, CRect(0, 0, BIOS::LCD::Width, 14), this);
+		CWnd::Create("A", CWnd::WsVisible, CRect(0, 0, BIOS::LCD::Width, BIOS::LCD::Height), nullptr);
+		mMenu.Create("M", CWnd::WsVisible, CRect(0, 0, BIOS::LCD::Width, 14), this);
 
 		constexpr int padding = 0;
-		mPortA.Create("Port A Control", CWnd::WsHidden, CRect(padding, 14 + padding, BIOS::LCD::Width - padding, BIOS::LCD::Height - padding), this);
-		mPortB.Create("Port B Control", CWnd::WsHidden, CRect(padding, 14 + padding, BIOS::LCD::Width - padding, BIOS::LCD::Height - padding), this);
-		mSettings.Create("Settings", CWnd::WsHidden, CRect(padding, 14 + padding, BIOS::LCD::Width - padding, BIOS::LCD::Height - padding), this);
+		mPortA.Create("PA", CWnd::WsHidden, CRect(padding, 14 + padding, BIOS::LCD::Width - padding, BIOS::LCD::Height - padding), this);
+		mPortB.Create("PB", CWnd::WsHidden, CRect(padding, 14 + padding, BIOS::LCD::Width - padding, BIOS::LCD::Height - padding), this);
+		mSettings.Create("CFG", CWnd::WsHidden, CRect(padding, 14 + padding, BIOS::LCD::Width - padding, BIOS::LCD::Height - padding), this);
 
 		mPortA.ShowWindow(true);
 		mPortA.SetFocus();

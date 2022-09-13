@@ -1,4 +1,7 @@
 {
     "cmake.configureOnOpen": false,
-    "cmake.sourceDirectory": "${workspaceFolder}/system/apps_shell/test29_fileman"
+    "cmake.sourceDirectory": "${workspaceFolder}/system/apps_shell/test29_fileman",
+    "C_Cpp.default.includePath": [
+        "C:\\Users\\Hailey\\Desktop\\LA104\\LA104\\system\\os_library\\include"
+    ]
 }

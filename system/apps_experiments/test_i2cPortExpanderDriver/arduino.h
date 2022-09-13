@@ -1,5 +1,5 @@
-#include <math.h>
-#include <stdint.h>
+// #include <math.h>
+// #include <stdint.h>
 typedef bool boolean;
 
 namespace Arduino 
@@ -42,6 +42,6 @@ namespace Arduino
     {  
       return BIOS::GPIO::I2C::Read();
     }
-  } Wire;
+  } static Wire;
 }
 
